@@ -8,81 +8,60 @@ import { parseCurrency, generateFileId } from '../../utils';
 import { extractTextFromPdf } from './pdfLoader';
 
 /**
- * Múltiples patrones regex para capturar registros de proveedores
- * Formato esperado: Fecha Codigo Nombre Documento Referencia Importe Eur
+ * Extrae registros de proveedores del texto del PDF
  * 
- * NOTA: El campo "Documento" es el que nos interesa para el matching (ej: 1/FC/250482)
- */
-const SUPPLIER_PATTERNS = [
-  // Patrón 1: Formato completo con Documento antes de Referencia
-  // Fecha | Codigo | Nombre | Documento | Referencia | Importe | Eur
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(.+?)\s+(\d+\/[A-Z]{2,}\/\d+)\s+([A-Z0-9/-]+)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*Eur/gi,
-  
-  // Patrón 2: Documento con formato alfanumérico (ej: FC-2024-001)
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(.+?)\s+([A-Z]{2,}-?\d+[-/]?\d*)\s+([A-Z0-9/-]+)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*Eur/gi,
-  
-  // Patrón 3: Formato más flexible
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(.+?)\s+([A-Z0-9]+\/[A-Z]+\/\d+)\s+\S+\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*Eur/gi,
-  
-  // Patrón 4: Sin referencia explícita (documento seguido directamente de importe)
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(.+?)\s+(\d+\/[A-Z]{2,}\/\d+)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*Eur/gi,
-];
-
-/**
- * Extrae registros de proveedores usando múltiples patrones
+ * Formato extraído por PDF.js (orden interno del PDF):
+ * Situación | Nombre | Código | Fecha | Referencia | Documento | Importe | Eur
+ * 
+ * Ejemplo real extraído:
+ * Pendiente GURBTEC IGUANA TELECOM, S.L. 286 05/12/2025   I25632985 1/FC/250487   198,89   Eur
  */
 function extractSupplierRecords(text: string, fileName: string): SupplierRecord[] {
   const records: SupplierRecord[] = [];
   const seenEntries = new Set<string>();
 
-  for (let patternIndex = 0; patternIndex < SUPPLIER_PATTERNS.length; patternIndex++) {
-    const pattern = SUPPLIER_PATTERNS[patternIndex];
-    pattern.lastIndex = 0;
-    const matches = text.matchAll(pattern);
+  // Patrón principal: Situacion Nombre Codigo Fecha Referencia Documento Importe Eur
+  // El nombre puede contener comas, puntos, espacios, etc.
+  // El documento siempre tiene formato número/letras/número (ej: 1/FC/250487)
+  const pattern = /(?:Pendiente|Pagado|Vencido)\s+(.+?)\s+(\d{1,4})\s+(\d{2}\/\d{2}\/\d{4})\s+(\S+)\s+(\d+\/[A-Z]{2,}\/\d+)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*Eur/gi;
+  
+  const matches = text.matchAll(pattern);
 
-    for (const match of matches) {
-      // Los patrones tienen diferente número de grupos
-      // Patrones 1, 2, 3: 6 grupos (fecha, codigo, nombre, documento, referencia, importe)
-      // Patrón 4: 5 grupos (fecha, codigo, nombre, documento, importe)
-      
-      const hasReferencia = match.length >= 7;
-      
-      const fecha = match[1];
-      const codigo = match[2];
-      const nombre = match[3].trim();
-      const documento = match[4]; // Este es el campo DOCUMENTO que queremos
-      const referencia = hasReferencia ? match[5] : '';
-      const importeRaw = hasReferencia ? match[6] : match[5];
+  for (const match of matches) {
+    const nombre = match[1].trim();
+    const codigo = match[2];
+    const fecha = match[3];
+    const referencia = match[4];
+    const documento = match[5];
+    const importeRaw = match[6];
 
-      // Clave única para evitar duplicados
-      const uniqueKey = `${fecha}-${documento}-${importeRaw}`;
+    const uniqueKey = `${fecha}-${documento}-${importeRaw}`;
+    
+    if (!seenEntries.has(uniqueKey) && documento && nombre) {
+      seenEntries.add(uniqueKey);
       
-      if (!seenEntries.has(uniqueKey) && documento) {
-        seenEntries.add(uniqueKey);
-        
-        const record: SupplierRecord = {
-          id: generateFileId(),
-          fecha,
-          codigo,
-          nombre,
-          documento,
-          referencia,
-          importeRaw,
-          importe: parseCurrency(importeRaw),
-          sourceFile: fileName,
-        };
-        
-        console.log(`[Supplier Parser] Match (patrón ${patternIndex + 1}):`, {
-          fecha,
-          codigo,
-          nombre: nombre.substring(0, 20) + '...',
-          documento, // <-- Este es el valor que usamos para el matching
-          referencia,
-          importe: importeRaw,
-        });
-        
-        records.push(record);
-      }
+      const record: SupplierRecord = {
+        id: generateFileId(),
+        fecha,
+        codigo,
+        nombre,
+        documento,
+        referencia,
+        importeRaw,
+        importe: parseCurrency(importeRaw),
+        sourceFile: fileName,
+      };
+      
+      console.log(`[Supplier Parser] Match:`, {
+        fecha,
+        codigo,
+        nombre,
+        documento,
+        referencia,
+        importe: importeRaw,
+      });
+      
+      records.push(record);
     }
   }
 

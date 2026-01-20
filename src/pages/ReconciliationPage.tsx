@@ -5,7 +5,7 @@
 
 import { Header, FileDropZone, ActionButton, ErrorMessage, ResultsTable } from '../components';
 import { useReconciliationContext } from '../context';
-import { downloadCsv } from '../utils';
+import { downloadCsv, downloadPdf } from '../utils';
 
 export function ReconciliationPage() {
   const {
@@ -31,10 +31,17 @@ export function ReconciliationPage() {
     canProcess,
   } = useReconciliationContext();
 
-  const handleExport = () => {
+  const timestamp = new Date().toISOString().split('T')[0];
+
+  const handleExportCsv = () => {
     if (results.length > 0) {
-      const timestamp = new Date().toISOString().split('T')[0];
       downloadCsv(results, `conciliacion_bancaria_${timestamp}.csv`);
+    }
+  };
+
+  const handleExportPdf = () => {
+    if (results.length > 0 && stats) {
+      downloadPdf(results, stats, `conciliacion_bancaria_${timestamp}.pdf`);
     }
   };
 
@@ -84,7 +91,8 @@ export function ReconciliationPage() {
           <ResultsTable
             records={results}
             stats={stats}
-            onExport={handleExport}
+            onExportCsv={handleExportCsv}
+            onExportPdf={handleExportPdf}
           />
         )}
       </div>

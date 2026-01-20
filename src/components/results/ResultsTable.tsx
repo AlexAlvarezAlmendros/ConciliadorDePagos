@@ -9,17 +9,18 @@ import { ResultRow } from './ResultRow';
 interface ResultsTableProps {
   records: MatchedBankRecord[];
   stats: ReconciliationStats;
-  onExport: () => void;
+  onExportCsv: () => void;
+  onExportPdf: () => void;
 }
 
-export function ResultsTable({ records, stats, onExport }: ResultsTableProps) {
+export function ResultsTable({ records, stats, onExportCsv, onExportPdf }: ResultsTableProps) {
   if (records.length === 0) {
     return null;
   }
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden animate-fade-in-up">
-      <ResultsHeader stats={stats} onExport={onExport} />
+      <ResultsHeader stats={stats} onExportCsv={onExportCsv} onExportPdf={onExportPdf} />
 
       <div className="overflow-x-auto max-h-[500px]">
         <table className="w-full text-sm text-left">

@@ -2,15 +2,16 @@
  * Encabezado de la tabla de resultados con estadísticas
  */
 
-import { CheckCircle, Download } from 'lucide-react';
+import { CheckCircle, Download, FileText } from 'lucide-react';
 import type { ReconciliationStats } from '../../types';
 
 interface ResultsHeaderProps {
   stats: ReconciliationStats;
-  onExport: () => void;
+  onExportCsv: () => void;
+  onExportPdf: () => void;
 }
 
-export function ResultsHeader({ stats, onExport }: ResultsHeaderProps) {
+export function ResultsHeader({ stats, onExportCsv, onExportPdf }: ResultsHeaderProps) {
   return (
     <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
@@ -30,13 +31,22 @@ export function ResultsHeader({ stats, onExport }: ResultsHeaderProps) {
           </span>
         </div>
       </div>
-      <button
-        onClick={onExport}
-        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-      >
-        <Download className="w-4 h-4" />
-        Descargar CSV
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={onExportCsv}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          CSV
+        </button>
+        <button
+          onClick={onExportPdf}
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          <FileText className="w-4 h-4" />
+          PDF
+        </button>
+      </div>
     </div>
   );
 }
