@@ -48,7 +48,9 @@ export function useReconciliation(): UseReconciliationReturn {
       if (bbvaData.length === 0) {
         throw new Error(
           'No se encontraron movimientos en los PDFs del BBVA. ' +
-          'Verifica que sean PDFs válidos y no escaneados como imagen.'
+          'El PDF parece ser una IMAGEN ESCANEADA (no tiene texto seleccionable). ' +
+          'Soluciones: 1) Usa el PDF original del banco, no un escaneo. ' +
+          '2) Si solo tienes el escaneo, necesitarás un software OCR para convertirlo a texto.'
         );
       }
 
