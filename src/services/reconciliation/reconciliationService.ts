@@ -29,6 +29,7 @@ const DEFAULT_OPTIONS: Required<MatchingOptions> = {
 
 /**
  * Busca una coincidencia de proveedor para un movimiento bancario
+ * Estrategia: Primero buscar por importe, si hay más de una coincidencia filtrar por fecha
  * @param bankRecord - Registro bancario a buscar
  * @param supplierRecords - Lista de registros de proveedores
  * @param options - Opciones de matching
@@ -39,21 +40,36 @@ function findSupplierMatch(
   supplierRecords: SupplierRecord[],
   options: Required<MatchingOptions>
 ): SupplierRecord | null {
-  for (const supplier of supplierRecords) {
-    // Verificar coincidencia de fechas
-    const dateMatches =
-      supplier.fecha === bankRecord.fValor ||
-      (options.useAccountingDate && supplier.fecha === bankRecord.fContable);
+  // Paso 1: Buscar todas las coincidencias por importe
+  const amountMatches = supplierRecords.filter((supplier) =>
+    amountsMatch(supplier.importe, bankRecord.importe, options.amountTolerance)
+  );
 
-    if (!dateMatches) continue;
-
-    // Verificar coincidencia de importes (usando valor absoluto por posibles signos diferentes)
-    if (amountsMatch(supplier.importe, bankRecord.importe, options.amountTolerance)) {
-      return supplier;
-    }
+  // Si no hay coincidencias por importe, no hay match
+  if (amountMatches.length === 0) {
+    return null;
   }
 
-  return null;
+  // Si solo hay una coincidencia por importe, es el match
+  if (amountMatches.length === 1) {
+    return amountMatches[0];
+  }
+
+  // Paso 2: Si hay más de una coincidencia por importe, filtrar por fecha
+  const dateAndAmountMatches = amountMatches.filter((supplier) => {
+    return (
+      supplier.fecha === bankRecord.fValor ||
+      (options.useAccountingDate && supplier.fecha === bankRecord.fContable)
+    );
+  });
+
+  // Si hay coincidencia por fecha e importe, devolver la primera
+  if (dateAndAmountMatches.length > 0) {
+    return dateAndAmountMatches[0];
+  }
+
+  // Si no hay coincidencia por fecha pero sí por importe, devolver la primera coincidencia por importe
+  return amountMatches[0];
 }
 
 /**

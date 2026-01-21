@@ -28,12 +28,15 @@ function extractSupplierRecords(text: string, fileName: string): SupplierRecord[
   const matches = text.matchAll(pattern);
 
   for (const match of matches) {
-    const nombre = match[1].trim();
+    let nombre = match[1].trim();
     const codigo = match[2];
     const fecha = match[3];
     const referencia = match[4];
     const documento = match[5];
     const importeRaw = match[6];
+
+    // Limpiar el nombre: quitar fecha si aparece al inicio (ej: "02/10/2025 SOLRED SA" -> "SOLRED SA")
+    nombre = nombre.replace(/^\d{2}\/\d{2}\/\d{4}\s+/, '');
 
     const uniqueKey = `${fecha}-${documento}-${importeRaw}`;
     

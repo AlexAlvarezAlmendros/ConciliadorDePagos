@@ -8,71 +8,61 @@ import { parseCurrency, generateFileId } from '../../utils';
 import { extractTextFromPdf } from './pdfLoader';
 
 /**
- * Múltiples patrones regex para capturar movimientos BBVA
- * Soportamos diferentes formatos que pueden aparecer en extractos originales o editados
+ * Patrón principal para capturar movimientos BBVA
+ * Formato: FechaContable FechaValor Concepto Importe EUR Saldo EUR
+ * 
+ * Ejemplo del texto extraído:
+ * 31/12/2025   31/12/2025   CUOTAS DE LA SEGURIDAD SOCIAL  N 2025363003862843 TGSS. COTIZACION 001 REGIMEN GENERAL   -3.572,32 EUR   21.158,15 EUR
  */
-const BBVA_PATTERNS = [
-  // Patrón 1: Formato estándar con dos fechas, concepto, importe y EUR
-  // Ejemplo: 31/12/2025 31/12/2025 CONCEPTO... -3.572,32 EUR
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([-]?[\d.]+,\d{2})\s*EUR/gi,
-  
-  // Patrón 2: Formato con separadores de miles como puntos
-  // Ejemplo: 31/12/2025 31/12/2025 PAGO PROVEEDOR -1.234,56 EUR
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*EUR/gi,
-  
-  // Patrón 3: Formato sin separador de miles
-  // Ejemplo: 31/12/2025 31/12/2025 PAGO -123,45 EUR
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([-]?\d+,\d{2})\s*EUR/gi,
-  
-  // Patrón 4: Formato con EUR antes o sin EUR explícito
-  // Ejemplo: 31/12/2025 31/12/2025 CONCEPTO 1.234,56
-  /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})(?:\s|$)/gi,
-  
-  // Patrón 5: Solo una fecha (algunos extractos editados)
-  // Ejemplo: 31/12/2025 PAGO PROVEEDOR -1.234,56 EUR
-  /(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*EUR/gi,
-];
 
 /**
- * Intenta extraer movimientos usando múltiples patrones
+ * Intenta extraer movimientos del texto
  */
 function extractMovementsFromText(text: string, fileName: string): BankRecord[] {
   const records: BankRecord[] = [];
   const seenEntries = new Set<string>(); // Evitar duplicados
 
-  for (const pattern of BBVA_PATTERNS) {
-    // Reset del regex para cada iteración
-    pattern.lastIndex = 0;
-    const matches = text.matchAll(pattern);
+  // Patrón: dos fechas, concepto, importe EUR, opcionalmente saldo EUR
+  // Nota: algunos importes tienen 1 decimal (ej: -2,3 EUR) y otros 2 (ej: -2,30 EUR)
+  const pattern = /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([-]?\d{1,3}(?:\.\d{3})*,\d{1,2})\s*EUR(?:\s+([-]?\d{1,3}(?:\.\d{3})*,\d{1,2})\s*EUR)?/gi;
+  
+  const matches = text.matchAll(pattern);
 
-    for (const match of matches) {
-      // Determinar si es patrón de una o dos fechas
-      const hasTwoDates = match.length >= 5;
-      
-      const fContable = match[1];
-      const fValor = hasTwoDates ? match[2] : match[1]; // Si solo hay una fecha, usar la misma
-      const concepto = hasTwoDates ? match[3] : match[2];
-      const importeRaw = hasTwoDates ? match[4] : match[3];
+  for (const match of matches) {
+    const fContable = match[1];
+    const fValor = match[2];
+    const concepto = match[3].trim();
+    const importeRaw = match[4];
+    const saldoRaw = match[5] || null;
 
-      // Crear clave única para evitar duplicados
-      const uniqueKey = `${fContable}-${fValor}-${importeRaw}`;
+    // Crear clave única incluyendo concepto para evitar duplicados
+    const uniqueKey = `${fContable}-${fValor}-${concepto.substring(0, 30)}-${importeRaw}`;
+    
+    if (!seenEntries.has(uniqueKey)) {
+      seenEntries.add(uniqueKey);
       
-      if (!seenEntries.has(uniqueKey)) {
-        seenEntries.add(uniqueKey);
+      // Validar que el concepto no sea solo espacios o muy corto
+      if (concepto && concepto.length > 2) {
+        const record: BankRecord = {
+          id: generateFileId(),
+          fContable,
+          fValor,
+          concepto,
+          importeRaw,
+          importe: parseCurrency(importeRaw),
+          saldo: saldoRaw ? parseCurrency(saldoRaw) : null,
+          sourceFile: fileName,
+        };
         
-        // Validar que el concepto no sea solo espacios o muy corto
-        if (concepto && concepto.trim().length > 1) {
-          records.push({
-            id: generateFileId(),
-            fContable,
-            fValor,
-            concepto: concepto.trim(),
-            importeRaw,
-            importe: parseCurrency(importeRaw),
-            saldo: null,
-            sourceFile: fileName,
-          });
-        }
+        console.log(`[BBVA Parser] Match:`, {
+          fContable,
+          fValor,
+          concepto: concepto.substring(0, 50) + (concepto.length > 50 ? '...' : ''),
+          importe: importeRaw,
+          saldo: saldoRaw,
+        });
+        
+        records.push(record);
       }
     }
   }
