@@ -1,10 +1,12 @@
 import type { MatchedBankRecord } from '../types';
+import { BANK_NAMES } from '../types';
 
 /**
  * Genera contenido CSV a partir de los resultados de conciliación
  */
 export function generateCsvContent(records: MatchedBankRecord[]): string {
   const headers = [
+    'Banco',
     'F. Contable',
     'F. Valor',
     'Concepto',
@@ -15,6 +17,7 @@ export function generateCsvContent(records: MatchedBankRecord[]): string {
   ];
 
   const rows = records.map((record) => [
+    BANK_NAMES[record.bankType] || record.bankType,
     record.fContable,
     record.fValor,
     `"${record.concepto.replace(/"/g, '""')}"`, // Escapar comillas dobles

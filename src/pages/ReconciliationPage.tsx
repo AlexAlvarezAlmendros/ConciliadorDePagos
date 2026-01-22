@@ -3,7 +3,7 @@
  * Orquesta todos los componentes de la aplicación
  */
 
-import { Header, FileDropZone, ActionButton, ErrorMessage, ResultsTable } from '../components';
+import { Header, FileDropZone, BankFileDropZone, ActionButton, ErrorMessage, ResultsTable } from '../components';
 import { useReconciliationContext } from '../context';
 import { downloadCsv, downloadPdf } from '../utils';
 
@@ -12,10 +12,11 @@ export function ReconciliationPage() {
     // PDF
     isPdfLoading,
     
-    // BBVA Files
-    bbvaFiles,
-    addBbvaFiles,
-    removeBbvaFile,
+    // Bank Files (múltiples bancos)
+    bankFiles,
+    addBankFiles,
+    removeBankFile,
+    updateBankFileType,
     
     // Supplier Files
     supplierFiles,
@@ -53,12 +54,13 @@ export function ReconciliationPage() {
 
         {/* Sección de carga de archivos */}
         <div className="grid md:grid-cols-2 gap-6">
-          <FileDropZone
-            title="Extractos BBVA"
-            subtitle="PDFs Mensuales (con col: F.Valor, Importe)"
-            files={bbvaFiles}
-            onFilesAdd={addBbvaFiles}
-            onFileRemove={removeBbvaFile}
+          <BankFileDropZone
+            title="Extractos Bancarios"
+            subtitle="PDFs de BBVA, CaixaBank, Sabadell o Santander"
+            files={bankFiles}
+            onFilesAdd={addBankFiles}
+            onFileRemove={removeBankFile}
+            onBankTypeChange={updateBankFileType}
             accentColor="blue"
           />
 

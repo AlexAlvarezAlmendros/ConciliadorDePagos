@@ -3,13 +3,22 @@
  */
 
 import type { MatchedBankRecord } from '../../types';
+import { BANK_NAMES } from '../../types';
 
 interface ResultRowProps {
   record: MatchedBankRecord;
 }
 
+const bankColors: Record<string, string> = {
+  bbva: 'bg-blue-100 text-blue-800',
+  caixabank: 'bg-cyan-100 text-cyan-800',
+  sabadell: 'bg-amber-100 text-amber-800',
+  santander: 'bg-red-100 text-red-800',
+};
+
 export function ResultRow({ record }: ResultRowProps) {
   const isMatched = record.status === 'match';
+  const bankColorClass = bankColors[record.bankType] || 'bg-slate-100 text-slate-800';
 
   return (
     <tr
@@ -27,6 +36,11 @@ export function ResultRow({ record }: ResultRowProps) {
             Pendiente
           </span>
         )}
+      </td>
+      <td className="px-6 py-3">
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${bankColorClass}`}>
+          {BANK_NAMES[record.bankType] || record.bankType}
+        </span>
       </td>
       <td className="px-6 py-3 font-medium text-slate-900">{record.fValor}</td>
       <td className="px-6 py-3 text-slate-500">{record.fContable}</td>

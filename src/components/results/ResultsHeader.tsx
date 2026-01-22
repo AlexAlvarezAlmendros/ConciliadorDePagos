@@ -20,7 +20,7 @@ export function ResultsHeader({ stats, onExportCsv, onExportPdf }: ResultsHeader
         </h3>
         <div className="flex gap-4 mt-2 text-sm flex-wrap">
           <span className="text-slate-500">
-            BBVA: <b className="text-slate-800">{stats.bbvaTotal}</b>
+            Mov. Bancarios: <b className="text-slate-800">{stats.bankTotal}</b>
           </span>
           <span className="text-slate-500">
             Proveedores: <b className="text-slate-800">{stats.supplierTotal}</b>

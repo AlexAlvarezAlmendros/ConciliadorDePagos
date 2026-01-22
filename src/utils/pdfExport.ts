@@ -46,7 +46,7 @@ export function downloadPdf(
   doc.text('Resumen:', 14, 32);
   
   doc.setFont('helvetica', 'normal');
-  doc.text('- Movimientos BBVA: ' + stats.bbvaTotal, 14, 38);
+  doc.text('- Movimientos Bancarios: ' + stats.bankTotal, 14, 38);
   doc.text('- Registros Proveedores: ' + stats.supplierTotal, 14, 44);
   doc.text('- Conciliados: ' + stats.matches + ' (' + stats.matchPercentage.toFixed(1) + '%)', 80, 38);
   doc.text('- Pendientes: ' + stats.unmatchedCount, 80, 44);

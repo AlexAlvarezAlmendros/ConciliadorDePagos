@@ -4,8 +4,8 @@
  */
 
 import { createContext, useContext, useCallback, type ReactNode } from 'react';
-import { usePdfLibrary, useFileUpload, useReconciliation } from '../hooks';
-import type { UploadedFile, MatchedBankRecord, ReconciliationStats } from '../types';
+import { usePdfLibrary, useFileUpload, useBankFileUpload, useReconciliation } from '../hooks';
+import type { UploadedFile, MatchedBankRecord, ReconciliationStats, BankType } from '../types';
 
 interface ReconciliationContextValue {
   // PDF Library
@@ -13,11 +13,12 @@ interface ReconciliationContextValue {
   isPdfLoading: boolean;
   pdfError: string | null;
 
-  // BBVA Files
-  bbvaFiles: UploadedFile[];
-  addBbvaFiles: (files: File[]) => void;
-  removeBbvaFile: (fileId: string) => void;
-  clearBbvaFiles: () => void;
+  // Bank Files (soporta múltiples bancos)
+  bankFiles: UploadedFile[];
+  addBankFiles: (files: File[], bankType: BankType) => void;
+  removeBankFile: (fileId: string) => void;
+  updateBankFileType: (fileId: string, bankType: BankType) => void;
+  clearBankFiles: () => void;
 
   // Supplier Files
   supplierFiles: UploadedFile[];
@@ -48,7 +49,7 @@ export function ReconciliationProvider({ children }: ReconciliationProviderProps
   const { isLoaded: isPdfLoaded, isLoading: isPdfLoading, error: pdfError } = usePdfLibrary();
 
   // File uploads
-  const bbvaUpload = useFileUpload();
+  const bankUpload = useBankFileUpload();
   const supplierUpload = useFileUpload();
 
   // Reconciliation
@@ -56,11 +57,11 @@ export function ReconciliationProvider({ children }: ReconciliationProviderProps
 
   // Start reconciliation with current files
   const startReconciliation = useCallback(async () => {
-    await reconciliation.process(bbvaUpload.files, supplierUpload.files);
-  }, [reconciliation, bbvaUpload.files, supplierUpload.files]);
+    await reconciliation.process(bankUpload.files, supplierUpload.files);
+  }, [reconciliation, bankUpload.files, supplierUpload.files]);
 
   // Computed values
-  const canProcess = isPdfLoaded && bbvaUpload.hasFiles && supplierUpload.hasFiles && !reconciliation.isProcessing;
+  const canProcess = isPdfLoaded && bankUpload.hasFiles && supplierUpload.hasFiles && !reconciliation.isProcessing;
 
   const value: ReconciliationContextValue = {
     // PDF Library
@@ -68,11 +69,12 @@ export function ReconciliationProvider({ children }: ReconciliationProviderProps
     isPdfLoading,
     pdfError,
 
-    // BBVA Files
-    bbvaFiles: bbvaUpload.files,
-    addBbvaFiles: bbvaUpload.addFiles,
-    removeBbvaFile: bbvaUpload.removeFile,
-    clearBbvaFiles: bbvaUpload.clearFiles,
+    // Bank Files
+    bankFiles: bankUpload.files,
+    addBankFiles: bankUpload.addFiles,
+    removeBankFile: bankUpload.removeFile,
+    updateBankFileType: bankUpload.updateBankType,
+    clearBankFiles: bankUpload.clearFiles,
 
     // Supplier Files
     supplierFiles: supplierUpload.files,

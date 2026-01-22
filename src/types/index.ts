@@ -1,5 +1,18 @@
 // ============================================
-// TIPOS PARA REGISTROS BANCARIOS (BBVA)
+// TIPOS PARA BANCOS SOPORTADOS
+// ============================================
+
+export type BankType = 'bbva' | 'caixabank' | 'sabadell' | 'santander';
+
+export const BANK_NAMES: Record<BankType, string> = {
+  bbva: 'BBVA',
+  caixabank: 'CaixaBank',
+  sabadell: 'Banco Sabadell',
+  santander: 'Banco Santander',
+};
+
+// ============================================
+// TIPOS PARA REGISTROS BANCARIOS
 // ============================================
 
 export interface BankRecord {
@@ -11,6 +24,7 @@ export interface BankRecord {
   importe: number;
   saldo: number | null;
   sourceFile: string;
+  bankType: BankType;
 }
 
 export interface MatchedBankRecord extends BankRecord {
@@ -40,7 +54,7 @@ export interface SupplierRecord {
 // ============================================
 
 export interface ReconciliationStats {
-  bbvaTotal: number;
+  bankTotal: number;
   supplierTotal: number;
   matches: number;
   unmatchedCount: number;
@@ -62,6 +76,7 @@ export interface UploadedFile {
   name: string;
   size: number;
   uploadedAt: Date;
+  bankType?: BankType;
 }
 
 export type FileType = 'bbva' | 'supplier';

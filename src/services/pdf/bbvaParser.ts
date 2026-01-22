@@ -52,6 +52,7 @@ function extractMovementsFromText(text: string, fileName: string): BankRecord[] 
           importe: parseCurrency(importeRaw),
           saldo: saldoRaw ? parseCurrency(saldoRaw) : null,
           sourceFile: fileName,
+          bankType: 'bbva',
         };
         
         console.log(`[BBVA Parser] Match:`, {

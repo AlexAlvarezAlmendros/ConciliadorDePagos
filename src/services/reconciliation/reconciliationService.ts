@@ -84,7 +84,7 @@ function calculateStats(
   const matchPercentage = records.length > 0 ? (matches / records.length) * 100 : 0;
 
   return {
-    bbvaTotal: records.length,
+    bankTotal: records.length,
     supplierTotal,
     matches,
     unmatchedCount,

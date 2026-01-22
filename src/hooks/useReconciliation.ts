@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import type { MatchedBankRecord, ReconciliationStats, UploadedFile } from '../types';
-import { parseBbvaFiles, parseSupplierFiles } from '../services/pdf';
+import { parseBankFiles, parseSupplierFiles } from '../services/pdf';
 import { performReconciliation } from '../services/reconciliation';
 
 interface UseReconciliationReturn {
@@ -23,10 +23,10 @@ export function useReconciliation(): UseReconciliationReturn {
   const [error, setError] = useState<string | null>(null);
 
   const process = useCallback(async (
-    bbvaFiles: UploadedFile[],
+    bankFiles: UploadedFile[],
     supplierFiles: UploadedFile[]
   ) => {
-    if (bbvaFiles.length === 0 || supplierFiles.length === 0) {
+    if (bankFiles.length === 0 || supplierFiles.length === 0) {
       setError('Por favor, sube archivos de ambos tipos.');
       return;
     }
@@ -37,20 +37,20 @@ export function useReconciliation(): UseReconciliationReturn {
     setStats(null);
 
     try {
-      // Extraer los File nativos
-      const bbvaNativeFiles = bbvaFiles.map((f) => f.file);
+      // Extraer los File nativos para proveedores
       const supplierNativeFiles = supplierFiles.map((f) => f.file);
 
-      // Parsear documentos
-      const bbvaData = await parseBbvaFiles(bbvaNativeFiles);
+      // Parsear documentos bancarios (usa el bankType de cada archivo)
+      const bankData = await parseBankFiles(bankFiles);
       const supplierData = await parseSupplierFiles(supplierNativeFiles);
 
-      if (bbvaData.length === 0) {
+      if (bankData.length === 0) {
         throw new Error(
-          'No se encontraron movimientos en los PDFs del BBVA. ' +
+          'No se encontraron movimientos en los PDFs bancarios. ' +
           'El PDF parece ser una IMAGEN ESCANEADA (no tiene texto seleccionable). ' +
           'Soluciones: 1) Usa el PDF original del banco, no un escaneo. ' +
-          '2) Si solo tienes el escaneo, necesitarás un software OCR para convertirlo a texto.'
+          '2) Si solo tienes el escaneo, necesitarás un software OCR para convertirlo a texto. ' +
+          '3) Verifica que has seleccionado el banco correcto para cada archivo.'
         );
       }
 
@@ -62,7 +62,7 @@ export function useReconciliation(): UseReconciliationReturn {
       }
 
       // Ejecutar conciliación
-      const result = performReconciliation(bbvaData, supplierData);
+      const result = performReconciliation(bankData, supplierData);
 
       setResults(result.records);
       setStats(result.stats);

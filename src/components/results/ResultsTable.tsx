@@ -27,7 +27,8 @@ export function ResultsTable({ records, stats, onExportCsv, onExportPdf }: Resul
           <thead className="bg-slate-50 text-slate-500 font-medium sticky top-0">
             <tr>
               <th className="px-6 py-3">Estado</th>
-              <th className="px-6 py-3">F. Valor (BBVA)</th>
+              <th className="px-6 py-3">Banco</th>
+              <th className="px-6 py-3">F. Valor</th>
               <th className="px-6 py-3">F. Contable</th>
               <th className="px-6 py-3">Concepto</th>
               <th className="px-6 py-3 text-right">Importe</th>
