@@ -5,6 +5,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { MatchedBankRecord, ReconciliationStats } from '../types';
+import { BANK_NAMES } from '../types';
 
 /**
  * Genera y descarga un PDF con los resultados de la conciliación
@@ -54,13 +55,14 @@ export function downloadPdf(
   // Preparar datos para la tabla
   const tableData = records.map((record) => [
     record.status === 'match' ? 'SI' : 'NO',
+    record.bankType ? BANK_NAMES[record.bankType] : '-',
     record.fValor,
     record.fContable,
-    record.concepto.length > 40 ? record.concepto.substring(0, 37) + '...' : record.concepto,
+    record.concepto.length > 35 ? record.concepto.substring(0, 32) + '...' : record.concepto,
     record.importeRaw,
     record.matchedDoc || '-',
     record.supplierName 
-      ? (record.supplierName.length > 20 ? record.supplierName.substring(0, 17) + '...' : record.supplierName)
+      ? (record.supplierName.length > 18 ? record.supplierName.substring(0, 15) + '...' : record.supplierName)
       : '-',
   ]);
 
@@ -69,6 +71,7 @@ export function downloadPdf(
     startY: 52,
     head: [[
       'Conciliado',
+      'Banco',
       'F. Valor',
       'F. Contable',
       'Concepto',
@@ -82,19 +85,20 @@ export function downloadPdf(
       fillColor: [79, 70, 229], // Indigo
       textColor: 255,
       fontStyle: 'bold',
-      fontSize: 9,
-    },
-    bodyStyles: {
       fontSize: 8,
     },
+    bodyStyles: {
+      fontSize: 7,
+    },
     columnStyles: {
-      0: { cellWidth: 20, halign: 'center' }, // Conciliado
-      1: { cellWidth: 22 }, // F. Valor
-      2: { cellWidth: 22 }, // F. Contable
-      3: { cellWidth: 75 }, // Concepto
-      4: { cellWidth: 25, halign: 'right' }, // Importe
-      5: { cellWidth: 35 }, // Documento
-      6: { cellWidth: 40 }, // Proveedor
+      0: { cellWidth: 18, halign: 'center' }, // Conciliado
+      1: { cellWidth: 22 }, // Banco
+      2: { cellWidth: 20 }, // F. Valor
+      3: { cellWidth: 20 }, // F. Contable
+      4: { cellWidth: 65 }, // Concepto
+      5: { cellWidth: 22, halign: 'right' }, // Importe
+      6: { cellWidth: 32 }, // Documento
+      7: { cellWidth: 35 }, // Proveedor
     },
     alternateRowStyles: {
       fillColor: [249, 250, 251], // Gris muy claro
@@ -111,7 +115,7 @@ export function downloadPdf(
         }
       }
       // Colorear importes negativos en rojo
-      if (data.column.index === 4 && data.section === 'body') {
+      if (data.column.index === 5 && data.section === 'body') {
         const text = data.cell.text[0] || '';
         if (text.startsWith('-')) {
           data.cell.styles.textColor = [220, 38, 38]; // Rojo

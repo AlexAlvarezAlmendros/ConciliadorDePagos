@@ -46,11 +46,12 @@ export function useReconciliation(): UseReconciliationReturn {
 
       if (bankData.length === 0) {
         throw new Error(
-          'No se encontraron movimientos en los PDFs bancarios. ' +
-          'El PDF parece ser una IMAGEN ESCANEADA (no tiene texto seleccionable). ' +
-          'Soluciones: 1) Usa el PDF original del banco, no un escaneo. ' +
-          '2) Si solo tienes el escaneo, necesitarás un software OCR para convertirlo a texto. ' +
-          '3) Verifica que has seleccionado el banco correcto para cada archivo.'
+          'No se encontraron movimientos en los archivos bancarios. ' +
+          'Posibles causas: ' +
+          '1) Si es un PDF, puede ser una imagen escaneada sin texto seleccionable. ' +
+          '2) Si es un Excel, verifica que el formato sea el esperado (con columnas Fecha, Movimiento, Importe). ' +
+          '3) Verifica que has seleccionado el banco correcto para cada archivo. ' +
+          '4) Revisa la consola del navegador (F12) para ver más detalles del error.'
         );
       }
 

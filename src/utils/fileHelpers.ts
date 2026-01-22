@@ -41,8 +41,39 @@ export function isPdfFile(file: File): boolean {
 }
 
 /**
+ * Valida que un archivo sea Excel (XLS, XLSX, ODS)
+ */
+export function isExcelFile(file: File): boolean {
+  const excelTypes = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.oasis.opendocument.spreadsheet',
+  ];
+  
+  const excelExtensions = ['.xls', '.xlsx', '.ods'];
+  const fileName = file.name.toLowerCase();
+  
+  return excelTypes.includes(file.type) || 
+         excelExtensions.some(ext => fileName.endsWith(ext));
+}
+
+/**
+ * Valida que un archivo sea PDF o Excel
+ */
+export function isSupportedFile(file: File): boolean {
+  return isPdfFile(file) || isExcelFile(file);
+}
+
+/**
  * Filtra solo archivos PDF válidos de una lista
  */
 export function filterPdfFiles(files: File[]): File[] {
   return files.filter(isPdfFile);
+}
+
+/**
+ * Filtra archivos soportados (PDF y Excel) de una lista
+ */
+export function filterSupportedFiles(files: File[]): File[] {
+  return files.filter(isSupportedFile);
 }

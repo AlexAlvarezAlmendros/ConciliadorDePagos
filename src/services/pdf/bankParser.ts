@@ -1,6 +1,7 @@
 /**
  * Parser unificado para múltiples bancos
  * Gestiona la selección del parser correcto según el tipo de banco
+ * Soporta tanto archivos PDF como Excel (XLS/XLSX)
  */
 
 import type { BankRecord, BankType, UploadedFile } from '../../types';
@@ -8,11 +9,13 @@ import { parseBbvaFile } from './bbvaParser';
 import { parseCaixabankFile } from './caixabankParser';
 import { parseSabadellFile } from './sabadellParser';
 import { parseSantanderFile } from './santanderParser';
+import { parseCaixabankExcelFile } from '../excel';
+import { isExcelFile } from '../../utils';
 
 /**
- * Mapa de parsers por tipo de banco
+ * Mapa de parsers PDF por tipo de banco
  */
-const bankParsers: Record<BankType, (file: File) => Promise<BankRecord[]>> = {
+const pdfParsers: Record<BankType, (file: File) => Promise<BankRecord[]>> = {
   bbva: parseBbvaFile,
   caixabank: parseCaixabankFile,
   sabadell: parseSabadellFile,
@@ -20,25 +23,46 @@ const bankParsers: Record<BankType, (file: File) => Promise<BankRecord[]>> = {
 };
 
 /**
- * Parsea un archivo PDF según el tipo de banco especificado
- * @param file - Archivo PDF del extracto bancario
+ * Mapa de parsers Excel por tipo de banco
+ * Solo CaixaBank soporta Excel por ahora
+ */
+const excelParsers: Partial<Record<BankType, (file: File) => Promise<BankRecord[]>>> = {
+  caixabank: parseCaixabankExcelFile,
+};
+
+/**
+ * Parsea un archivo según el tipo de banco especificado
+ * Detecta automáticamente si es PDF o Excel
+ * @param file - Archivo del extracto bancario (PDF o Excel)
  * @param bankType - Tipo de banco (bbva, caixabank, sabadell, santander)
  * @returns Array de registros bancarios encontrados
  */
 export async function parseBankFile(file: File, bankType: BankType): Promise<BankRecord[]> {
-  const parser = bankParsers[bankType];
+  const isExcel = isExcelFile(file);
   
-  if (!parser) {
+  console.log(`[Bank Parser] Procesando archivo ${file.name} como ${bankType} (${isExcel ? 'Excel' : 'PDF'})`);
+  
+  if (isExcel) {
+    const excelParser = excelParsers[bankType];
+    
+    if (!excelParser) {
+      throw new Error(`El banco ${bankType} no soporta archivos Excel. Por favor, use un archivo PDF.`);
+    }
+    
+    return excelParser(file);
+  }
+  
+  const pdfParser = pdfParsers[bankType];
+  
+  if (!pdfParser) {
     throw new Error(`Parser no disponible para el banco: ${bankType}`);
   }
   
-  console.log(`[Bank Parser] Procesando archivo ${file.name} como ${bankType}`);
-  
-  return parser(file);
+  return pdfParser(file);
 }
 
 /**
- * Parsea múltiples archivos PDF de bancos
+ * Parsea múltiples archivos de bancos
  * Cada archivo debe tener un bankType asociado
  * @param files - Array de archivos con su tipo de banco
  * @returns Array consolidado de todos los registros
@@ -70,5 +94,5 @@ export async function parseBankFiles(files: UploadedFile[]): Promise<BankRecord[
  * Obtiene los bancos soportados
  */
 export function getSupportedBanks(): BankType[] {
-  return Object.keys(bankParsers) as BankType[];
+  return Object.keys(pdfParsers) as BankType[];
 }

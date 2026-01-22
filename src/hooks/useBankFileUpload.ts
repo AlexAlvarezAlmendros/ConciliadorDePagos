@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import type { UploadedFile, BankType } from '../types';
-import { filterPdfFiles, generateFileId } from '../utils';
+import { filterSupportedFiles, generateFileId } from '../utils';
 
 interface UseBankFileUploadReturn {
   files: UploadedFile[];
@@ -33,8 +33,9 @@ export function useBankFileUpload(): UseBankFileUploadReturn {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
   const addFiles = useCallback((newFiles: File[], bankType: BankType) => {
-    const pdfFiles = filterPdfFiles(newFiles);
-    const uploadedFiles = pdfFiles.map((file) => fileToUploadedFileWithBank(file, bankType));
+    // Filtrar archivos soportados (PDF y Excel)
+    const supportedFiles = filterSupportedFiles(newFiles);
+    const uploadedFiles = supportedFiles.map((file) => fileToUploadedFileWithBank(file, bankType));
     setFiles((prev) => [...prev, ...uploadedFiles]);
   }, []);
 

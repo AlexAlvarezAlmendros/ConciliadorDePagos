@@ -1,13 +1,14 @@
 /**
  * Componente de zona de arrastre para subir archivos bancarios
  * Incluye selector de banco para cada archivo
+ * Soporta PDF y Excel (XLS/XLSX)
  */
 
 import { useCallback, useRef } from 'react';
-import { Upload, Trash2, FileText, Building2 } from 'lucide-react';
+import { Upload, Trash2, FileText, Building2, FileSpreadsheet } from 'lucide-react';
 import type { UploadedFile, BankType } from '../../types';
 import { BANK_NAMES } from '../../types';
-import { formatFileSize } from '../../utils';
+import { formatFileSize, isExcelFile } from '../../utils';
 
 interface BankFileDropZoneProps {
   title: string;
@@ -54,10 +55,20 @@ export function BankFileDropZone({
   onFileRemove,
   onBankTypeChange,
   accentColor,
-  accept = '.pdf',
+  accept = '.pdf,.xls,.xlsx',
 }: BankFileDropZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const colors = colorClasses[accentColor];
+
+  /**
+   * Determina el icono apropiado según el tipo de archivo
+   */
+  const getFileIcon = (file: UploadedFile) => {
+    if (isExcelFile(file.file)) {
+      return <FileSpreadsheet className="w-4 h-4 text-green-600" />;
+    }
+    return <FileText className="w-4 h-4 text-blue-600" />;
+  };
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,13 +117,16 @@ export function BankFileDropZone({
             className="bg-slate-50 p-3 rounded-lg text-sm"
           >
             <div className="flex items-center justify-between mb-2">
-              <div className="flex-1 min-w-0">
-                <span className="truncate block max-w-[180px] font-medium" title={file.name}>
-                  {file.name}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {formatFileSize(file.size)}
-                </span>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {getFileIcon(file)}
+                <div className="flex-1 min-w-0">
+                  <span className="truncate block max-w-[160px] font-medium" title={file.name}>
+                    {file.name}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {formatFileSize(file.size)}
+                  </span>
+                </div>
               </div>
               <button
                 onClick={() => onFileRemove(file.id)}
@@ -152,7 +166,7 @@ export function BankFileDropZone({
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
             <Upload className={`w-8 h-8 ${colors.uploadIcon} mb-2`} />
             <p className="text-sm text-slate-500">
-              Click o arrastra para subir PDF(s)
+              Click o arrastra PDF o Excel
             </p>
           </div>
           <input
