@@ -34,6 +34,7 @@ interface ReconciliationContextValue {
   error: string | null;
   startReconciliation: () => Promise<void>;
   resetResults: () => void;
+  updateDocument: (recordId: string, newDocument: string) => void;
 
   // Computed
   canProcess: boolean;
@@ -91,6 +92,7 @@ export function ReconciliationProvider({ children }: ReconciliationProviderProps
     error: reconciliation.error,
     startReconciliation,
     resetResults: reconciliation.reset,
+    updateDocument: reconciliation.updateDocument,
 
     // Computed
     canProcess,

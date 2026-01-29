@@ -16,6 +16,7 @@ interface UseReconciliationReturn {
   error: string | null;
   process: (bbvaFiles: UploadedFile[], supplierFiles: UploadedFile[]) => Promise<void>;
   reset: () => void;
+  updateDocument: (recordId: string, newDocument: string) => void;
 }
 
 export function useReconciliation(): UseReconciliationReturn {
@@ -115,6 +116,16 @@ export function useReconciliation(): UseReconciliationReturn {
     setError(null);
   }, []);
 
+  const updateDocument = useCallback((recordId: string, newDocument: string) => {
+    setResults((prevResults) =>
+      prevResults.map((record) =>
+        record.id === recordId
+          ? { ...record, matchedDoc: newDocument || null }
+          : record
+      )
+    );
+  }, []);
+
   return {
     results,
     stats,
@@ -122,5 +133,6 @@ export function useReconciliation(): UseReconciliationReturn {
     error,
     process,
     reset,
+    updateDocument,
   };
 }

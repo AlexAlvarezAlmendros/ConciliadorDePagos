@@ -31,6 +31,7 @@ export function ReconciliationPage() {
     error,
     startReconciliation,
     canProcess,
+    updateDocument,
   } = useReconciliationContext();
 
   const timestamp = new Date().toISOString().split('T')[0];
@@ -99,6 +100,7 @@ export function ReconciliationPage() {
             stats={stats}
             onExportCsv={handleExportCsv}
             onExportPdf={handleExportPdf}
+            onUpdateDocument={updateDocument}
           />
         )}
       </div>

@@ -11,9 +11,10 @@ interface ResultsTableProps {
   stats: ReconciliationStats;
   onExportCsv: () => void;
   onExportPdf: () => void;
+  onUpdateDocument: (recordId: string, newDocument: string) => void;
 }
 
-export function ResultsTable({ records, stats, onExportCsv, onExportPdf }: ResultsTableProps) {
+export function ResultsTable({ records, stats, onExportCsv, onExportPdf, onUpdateDocument }: ResultsTableProps) {
   if (records.length === 0) {
     return null;
   }
@@ -39,7 +40,7 @@ export function ResultsTable({ records, stats, onExportCsv, onExportPdf }: Resul
           </thead>
           <tbody className="divide-y divide-slate-100">
             {records.map((record) => (
-              <ResultRow key={record.id} record={record} />
+              <ResultRow key={record.id} record={record} onUpdateDocument={onUpdateDocument} />
             ))}
           </tbody>
         </table>
