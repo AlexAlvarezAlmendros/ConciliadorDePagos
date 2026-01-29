@@ -29,7 +29,7 @@ const DEFAULT_OPTIONS: Required<MatchingOptions> = {
 
 /**
  * Busca una coincidencia de proveedor para un movimiento bancario
- * Estrategia: Primero buscar por importe, si hay más de una coincidencia filtrar por fecha
+ * Estrategia: Buscar por importe Y fecha simultáneamente
  * @param bankRecord - Registro bancario a buscar
  * @param supplierRecords - Lista de registros de proveedores
  * @param options - Opciones de matching
@@ -40,36 +40,24 @@ function findSupplierMatch(
   supplierRecords: SupplierRecord[],
   options: Required<MatchingOptions>
 ): SupplierRecord | null {
-  // Paso 1: Buscar todas las coincidencias por importe
-  const amountMatches = supplierRecords.filter((supplier) =>
-    amountsMatch(supplier.importe, bankRecord.importe, options.amountTolerance)
-  );
+  // Buscar coincidencias por importe Y fecha
+  const matches = supplierRecords.filter((supplier) => {
+    const amountMatch = amountsMatch(supplier.importe, bankRecord.importe, options.amountTolerance);
+    
+    if (!amountMatch) {
+      return false;
+    }
 
-  // Si no hay coincidencias por importe, no hay match
-  if (amountMatches.length === 0) {
-    return null;
-  }
-
-  // Si solo hay una coincidencia por importe, es el match
-  if (amountMatches.length === 1) {
-    return amountMatches[0];
-  }
-
-  // Paso 2: Si hay más de una coincidencia por importe, filtrar por fecha
-  const dateAndAmountMatches = amountMatches.filter((supplier) => {
-    return (
+    // La fecha debe coincidir con fecha valor o fecha contable
+    const dateMatch = 
       supplier.fecha === bankRecord.fValor ||
-      (options.useAccountingDate && supplier.fecha === bankRecord.fContable)
-    );
+      (options.useAccountingDate && supplier.fecha === bankRecord.fContable);
+
+    return dateMatch;
   });
 
-  // Si hay coincidencia por fecha e importe, devolver la primera
-  if (dateAndAmountMatches.length > 0) {
-    return dateAndAmountMatches[0];
-  }
-
-  // Si no hay coincidencia por fecha pero sí por importe, devolver la primera coincidencia por importe
-  return amountMatches[0];
+  // Devolver la primera coincidencia (o null si no hay ninguna)
+  return matches.length > 0 ? matches[0] : null;
 }
 
 /**
