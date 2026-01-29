@@ -3,18 +3,43 @@
  */
 
 /**
- * Parsea un string con formato de moneda europea (1.234,56) a número
- * @param str - String con el importe en formato europeo
+ * Parsea un string con formato de moneda europea (1.234,56) o americana (1,234.56) a número
+ * @param str - String con el importe
  * @returns Número parseado o 0 si no es válido
  */
 export function parseCurrency(str: string | null | undefined): number {
   if (!str) return 0;
   
-  // Formato europeo: 1.234,56 -> eliminar puntos, reemplazar coma por punto
-  const cleanStr = str
-    .replace(/\./g, '')      // Eliminar separadores de miles
-    .replace(',', '.')       // Reemplazar coma decimal por punto
-    .replace(/[^\d.-]/g, ''); // Eliminar caracteres no numéricos excepto dígitos, punto y menos
+  // Convertir a string y limpiar espacios
+  let cleanStr = String(str).trim();
+  
+  // Eliminar símbolos de moneda y espacios
+  cleanStr = cleanStr.replace(/[€$£¥\s]/g, '');
+  
+  // Detectar formato basándose en qué símbolo aparece último
+  const hasComma = cleanStr.includes(',');
+  const hasDot = cleanStr.includes('.');
+  
+  if (hasComma && hasDot) {
+    // Tiene ambos: determinar formato por posición
+    const lastCommaPos = cleanStr.lastIndexOf(',');
+    const lastDotPos = cleanStr.lastIndexOf('.');
+    
+    if (lastDotPos > lastCommaPos) {
+      // Formato americano: 1,234.56 (el punto está después de la coma)
+      cleanStr = cleanStr.replace(/,/g, ''); // Eliminar comas
+    } else {
+      // Formato europeo: 1.234,56 (la coma está después del punto)
+      cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+    }
+  } else if (hasComma && !hasDot) {
+    // Solo coma: formato europeo sin miles 234,56
+    cleanStr = cleanStr.replace(',', '.');
+  }
+  // Si solo tiene punto, ya está en formato correcto para parseFloat
+  
+  // Eliminar cualquier otro caracter no numérico excepto punto decimal y signo negativo
+  cleanStr = cleanStr.replace(/[^\d.-]/g, '');
   
   const parsed = parseFloat(cleanStr);
   return isNaN(parsed) ? 0 : parsed;

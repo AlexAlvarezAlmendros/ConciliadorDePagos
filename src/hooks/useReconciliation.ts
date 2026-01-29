@@ -5,7 +5,9 @@
 import { useState, useCallback } from 'react';
 import type { MatchedBankRecord, ReconciliationStats, UploadedFile } from '../types';
 import { parseBankFiles, parseSupplierFiles } from '../services/pdf';
+import { parseSupplierExcel } from '../services/excel';
 import { performReconciliation } from '../services/reconciliation';
+import { isExcelFile } from '../utils';
 
 interface UseReconciliationReturn {
   results: MatchedBankRecord[];
@@ -37,12 +39,39 @@ export function useReconciliation(): UseReconciliationReturn {
     setStats(null);
 
     try {
-      // Extraer los File nativos para proveedores
-      const supplierNativeFiles = supplierFiles.map((f) => f.file);
+      // Separar archivos PDF y Excel de proveedores
+      const supplierPdfFiles: File[] = [];
+      const supplierExcelFiles: UploadedFile[] = [];
+      
+      for (const uploadedFile of supplierFiles) {
+        if (uploadedFile.isExcel || isExcelFile(uploadedFile.file)) {
+          supplierExcelFiles.push(uploadedFile);
+        } else {
+          supplierPdfFiles.push(uploadedFile.file);
+        }
+      }
 
       // Parsear documentos bancarios (usa el bankType de cada archivo)
       const bankData = await parseBankFiles(bankFiles);
-      const supplierData = await parseSupplierFiles(supplierNativeFiles);
+      
+      // Parsear proveedores PDF
+      const supplierPdfData = supplierPdfFiles.length > 0 
+        ? await parseSupplierFiles(supplierPdfFiles)
+        : [];
+      
+      // Parsear proveedores Excel
+      const supplierExcelData = [];
+      for (const excelFile of supplierExcelFiles) {
+        if (!excelFile.selectedSheets || excelFile.selectedSheets.length === 0) {
+          console.warn(`Excel ${excelFile.name}: No hay hojas seleccionadas`);
+          continue;
+        }
+        const records = await parseSupplierExcel(excelFile.file, excelFile.selectedSheets);
+        supplierExcelData.push(...records);
+      }
+      
+      // Combinar datos de proveedores
+      const supplierData = [...supplierPdfData, ...supplierExcelData];
 
       if (bankData.length === 0) {
         throw new Error(
@@ -57,8 +86,9 @@ export function useReconciliation(): UseReconciliationReturn {
 
       if (supplierData.length === 0) {
         throw new Error(
-          'No se encontraron registros en los PDFs de Proveedores. ' +
-          'Verifica que sean PDFs válidos y no escaneados como imagen.'
+          'No se encontraron registros en los archivos de Proveedores. ' +
+          'Verifica que: 1) Los PDFs sean válidos y no escaneados como imagen. ' +
+          '2) Los archivos Excel tengan hojas seleccionadas con datos válidos.'
         );
       }
 

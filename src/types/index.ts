@@ -70,6 +70,13 @@ export interface ReconciliationResult {
 // TIPOS PARA ARCHIVOS
 // ============================================
 
+export interface ExcelSheetInfo {
+  name: string;
+  month: string;
+  year: string;
+  recordCount: number;
+}
+
 export interface UploadedFile {
   id: string;
   file: File;
@@ -77,6 +84,10 @@ export interface UploadedFile {
   size: number;
   uploadedAt: Date;
   bankType?: BankType;
+  // Para archivos Excel de proveedores
+  isExcel?: boolean;
+  excelSheets?: ExcelSheetInfo[];
+  selectedSheets?: string[];
 }
 
 export type FileType = 'bbva' | 'supplier';
@@ -98,6 +109,7 @@ export interface AppState {
 export type AppAction =
   | { type: 'ADD_FILES'; payload: { fileType: FileType; files: UploadedFile[] } }
   | { type: 'REMOVE_FILE'; payload: { fileType: FileType; fileId: string } }
+  | { type: 'UPDATE_EXCEL_SHEETS'; payload: { fileType: FileType; fileId: string; selectedSheets: string[] } }
   | { type: 'CLEAR_FILES'; payload: { fileType: FileType } }
   | { type: 'SET_PROCESSING'; payload: boolean }
   | { type: 'SET_RESULTS'; payload: ReconciliationResult }

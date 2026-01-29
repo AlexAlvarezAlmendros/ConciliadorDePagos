@@ -22,6 +22,7 @@ export function ReconciliationPage() {
     supplierFiles,
     addSupplierFiles,
     removeSupplierFile,
+    updateSupplierSheets,
     
     // Reconciliation
     results,
@@ -66,11 +67,14 @@ export function ReconciliationPage() {
 
           <FileDropZone
             title="Cartera Proveedores"
-            subtitle="PDFs Listados (con col: Fecha, Documento)"
+            subtitle="PDFs Listados o Excel (.xls/.xlsx) con cobros"
             files={supplierFiles}
             onFilesAdd={addSupplierFiles}
             onFileRemove={removeSupplierFile}
+            onSheetSelectionChange={updateSupplierSheets}
             accentColor="emerald"
+            accept=".pdf,.xls,.xlsx"
+            showSheetSelector={true}
           />
         </div>
 

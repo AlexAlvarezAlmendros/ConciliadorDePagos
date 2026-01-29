@@ -24,6 +24,7 @@ interface ReconciliationContextValue {
   supplierFiles: UploadedFile[];
   addSupplierFiles: (files: File[]) => void;
   removeSupplierFile: (fileId: string) => void;
+  updateSupplierSheets: (fileId: string, selectedSheets: string[]) => void;
   clearSupplierFiles: () => void;
 
   // Reconciliation
@@ -80,6 +81,7 @@ export function ReconciliationProvider({ children }: ReconciliationProviderProps
     supplierFiles: supplierUpload.files,
     addSupplierFiles: supplierUpload.addFiles,
     removeSupplierFile: supplierUpload.removeFile,
+    updateSupplierSheets: supplierUpload.updateSheets,
     clearSupplierFiles: supplierUpload.clearFiles,
 
     // Reconciliation
