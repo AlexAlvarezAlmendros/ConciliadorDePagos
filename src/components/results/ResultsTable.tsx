@@ -33,6 +33,7 @@ export function ResultsTable({ records, stats, onExportCsv, onExportPdf, onUpdat
               <th className="px-6 py-3">F. Contable</th>
               <th className="px-6 py-3">Concepto</th>
               <th className="px-6 py-3 text-right">Importe</th>
+              <th className="px-6 py-3 text-right">Saldo</th>
               <th className="px-6 py-3 bg-indigo-50 text-indigo-700 border-l border-indigo-100">
                 Documento (Match)
               </th>

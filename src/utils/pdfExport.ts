@@ -60,6 +60,7 @@ export function downloadPdf(
     record.fContable,
     record.concepto.length > 35 ? record.concepto.substring(0, 32) + '...' : record.concepto,
     record.importeRaw,
+    record.saldo !== null ? record.saldo.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-',
     record.matchedDoc || '-',
     record.supplierName 
       ? (record.supplierName.length > 18 ? record.supplierName.substring(0, 15) + '...' : record.supplierName)
@@ -76,6 +77,7 @@ export function downloadPdf(
       'F. Contable',
       'Concepto',
       'Importe',
+      'Saldo',
       'Documento',
       'Proveedor',
     ]],
@@ -95,10 +97,11 @@ export function downloadPdf(
       1: { cellWidth: 22 }, // Banco
       2: { cellWidth: 20 }, // F. Valor
       3: { cellWidth: 20 }, // F. Contable
-      4: { cellWidth: 65 }, // Concepto
+      4: { cellWidth: 55 }, // Concepto
       5: { cellWidth: 22, halign: 'right' }, // Importe
-      6: { cellWidth: 32 }, // Documento
-      7: { cellWidth: 35 }, // Proveedor
+      6: { cellWidth: 22, halign: 'right' }, // Saldo
+      7: { cellWidth: 28 }, // Documento
+      8: { cellWidth: 30 }, // Proveedor
     },
     alternateRowStyles: {
       fillColor: [249, 250, 251], // Gris muy claro

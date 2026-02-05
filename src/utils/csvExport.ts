@@ -11,6 +11,7 @@ export function generateCsvContent(records: MatchedBankRecord[]): string {
     'F. Valor',
     'Concepto',
     'Importe',
+    'Saldo',
     'Documento Proveedor',
     'Proveedor (Nombre)',
     'Estado',
@@ -22,6 +23,7 @@ export function generateCsvContent(records: MatchedBankRecord[]): string {
     record.fValor,
     `"${record.concepto.replace(/"/g, '""')}"`, // Escapar comillas dobles
     record.importeRaw,
+    record.saldo !== null ? record.saldo.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-',
     record.matchedDoc || 'NO ENCONTRADO',
     record.supplierName || '-',
     record.status === 'match' ? 'Conciliado' : 'Pendiente',

@@ -87,6 +87,9 @@ export function ResultRow({ record, onUpdateDocument }: ResultRowProps) {
       >
         {record.importeRaw}
       </td>
+      <td className="px-6 py-3 text-right font-mono text-slate-700">
+        {record.saldo !== null ? `${record.saldo.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €` : '-'}
+      </td>
       <td className="px-6 py-3 border-l border-slate-100">
         {isEditing ? (
           <div className="flex items-center gap-2">
